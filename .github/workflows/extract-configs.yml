@@ -1,0 +1,61 @@
+name: "Extract configs"
+
+on:
+   workflow_dispatch:
+    inputs:
+        paper_version:
+            description: 'Paper Minecraft version'
+            required: true
+jobs:
+  generate-minecraft-configs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+  
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+  
+      - name: Pull itzg/minecraft-server image
+        run: docker pull itzg/minecraft-server
+  
+      - name: Start Minecraft Server
+        run: |
+            docker run -d \
+            -e EULA=TRUE \
+            -e TYPE=PAPER \
+            -e VERSION=${{ github.event.inputs.paper_version }} \
+            -p 25565:25565 \
+            --name minecraft-server \
+            itzg/minecraft-server
+            
+      - name: Wait for a period
+        run: sleep 60  # Let the minecraft server start up at least half way      
+
+      - name: Stop Minecraft Server
+        run: docker stop minecraft-server
+  extract-minecraft-configs:
+    runs-on: ubuntu-latest
+    needs: generate-minecraft-configs
+    steps:
+      - name: Copy configuration files
+        run: |
+          mkdir -p ${{ github.event.inputs.paper_version }}
+          docker cp minecraft-server:/data/config/paper-global.yml ./${{ github.event.inputs.paper_version }}/paper-global.yml
+          docker cp minecraft-server:/data/config/paper-world-defaults.yml ./${{ github.event.inputs.paper_version }}/paper-world-defaults.yml
+          docker cp minecraft-server:/data/spigot.yml ./${{ github.event.inputs.paper_version }}/spigot.yml
+
+      - name: Commit configuration files
+        run: |
+          git config --global user.name "config-action"
+          git config --global user.email "config-action@unavailable.com"
+          git add ${{ github.event.inputs.paper_version }}
+          git commit -m "Add configuration files for Paper version ${{ github.event.inputs.paper_version }}"
+          git push
+
+  clear-minecraft-server:
+    runs-on: ubuntu-latest
+    needs: extract-minecraft-configs
+    steps:
+      - name: Clear away Minecraft Server
+        run: docker rm minecraft-server
