@@ -1,0 +1,37 @@
+name: Manual Merge All Branches into Main
+
+on:
+  workflow_dispatch:
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Setup Git
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+    - name: Fetch all branches
+      run: |
+        git fetch --all
+
+    - name: List all branches
+      id: list_branches
+      run: |
+        BRANCHES=$(git branch -r | grep -v '\->' | grep -v 'origin/main' | sed 's/origin\///')
+        echo "BRANCHES=$BRANCHES" >> $GITHUB_ENV
+
+    - name: Merge branches into main
+      run: |
+        git checkout main
+        git pull origin main
+        for branch in $BRANCHES; do
+          echo "Merging branch $branch into main"
+          git merge origin/$branch || exit 1
+        done
+        git push origin main
