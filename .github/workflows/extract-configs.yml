@@ -41,6 +41,7 @@ jobs:
           docker cp -q minecraft-server:/data/config/paper-global.yml ./${{ github.event.inputs.paper_version }}/paper-global.yml || echo "not found, skipping"
           docker cp -q minecraft-server:/data/config/paper-world-defaults.yml ./${{ github.event.inputs.paper_version }}/paper-world-defaults.yml || echo "not found, skipping"
           docker cp -q minecraft-server:/data/spigot.yml ./${{ github.event.inputs.paper_version }}/spigot.yml || echo "not found, skipping"
+          docker cp -q minecraft-server:/data/paper.yml ./${{ github.event.inputs.paper_version }}/spigot.yml || echo "not found, skipping"
 
       - name: Commit configuration files
         env:
