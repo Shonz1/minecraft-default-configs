@@ -34,10 +34,7 @@ jobs:
 
       - name: Stop Minecraft Server
         run: docker stop minecraft-server
-  extract-minecraft-configs:
-    runs-on: ubuntu-latest
-    needs: generate-minecraft-configs
-    steps:
+
       - name: Copy configuration files
         run: |
           mkdir -p ${{ github.event.inputs.paper_version }}
@@ -52,10 +49,6 @@ jobs:
           git add ${{ github.event.inputs.paper_version }}
           git commit -m "Add configuration files for Paper version ${{ github.event.inputs.paper_version }}"
           git push
-
-  clear-minecraft-server:
-    runs-on: ubuntu-latest
-    needs: extract-minecraft-configs
-    steps:
+          
       - name: Clear away Minecraft Server
         run: docker rm minecraft-server
