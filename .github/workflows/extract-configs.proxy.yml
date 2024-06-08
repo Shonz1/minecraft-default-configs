@@ -44,8 +44,8 @@ jobs:
       - name: Copy configuration files
         run: |
           mkdir -p ${{ github.event.inputs.proxy_type }}
-          docker cp -q minecraft-server:/data/config/paper-global.yml ./${{ github.event.inputs.proxy_type }}/velocity.toml || echo "not found, skipping"
-          docker cp -q minecraft-server:/data/config/paper-world-defaults.yml ./${{ github.event.inputs.proxy_type }}/config.yml || echo "not found, skipping"
+          docker cp -q minecraft-server:/server/velocity.toml ./${{ github.event.inputs.proxy_type }}/velocity.toml || echo "not found, skipping"
+          docker cp -q minecraft-server:/server/config.yml ./${{ github.event.inputs.proxy_type }}/config.yml || echo "not found, skipping"
 
       - name: Commit configuration files
         env:
