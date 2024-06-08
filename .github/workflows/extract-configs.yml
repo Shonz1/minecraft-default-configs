@@ -29,8 +29,11 @@ jobs:
             --name minecraft-server \
             itzg/minecraft-server
             
-      - name: Wait for a period
-        run: sleep 60  # Let the minecraft server start up at least half way      
+      - name: Wait for container to become healthy
+        run: |
+            while [[ "$(docker inspect -f '{{.State.Health.Status}}' minecraft-server)" != "healthy" ]]; do
+              sleep 5
+            done    
 
       - name: Stop Minecraft Server
         run: docker stop minecraft-server
