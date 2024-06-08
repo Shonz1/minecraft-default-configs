@@ -38,9 +38,9 @@ jobs:
       - name: Copy configuration files
         run: |
           mkdir -p ${{ github.event.inputs.paper_version }}
-          docker cp minecraft-server:/data/config/paper-global.yml ./${{ github.event.inputs.paper_version }}/paper-global.yml
-          docker cp minecraft-server:/data/config/paper-world-defaults.yml ./${{ github.event.inputs.paper_version }}/paper-world-defaults.yml
-          docker cp minecraft-server:/data/spigot.yml ./${{ github.event.inputs.paper_version }}/spigot.yml
+          docker cp -q minecraft-server:/data/config/paper-global.yml ./${{ github.event.inputs.paper_version }}/paper-global.yml || echo "not found, skipping"
+          docker cp -q minecraft-server:/data/config/paper-world-defaults.yml ./${{ github.event.inputs.paper_version }}/paper-world-defaults.yml || echo "not found, skipping"
+          docker cp -q minecraft-server:/data/spigot.yml ./${{ github.event.inputs.paper_version }}/spigot.yml || echo "not found, skipping"
 
       - name: Commit configuration files
         env:
