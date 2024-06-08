@@ -1,0 +1,61 @@
+name: "Extract proxy configs"
+
+on:
+   workflow_dispatch:
+    inputs:
+        proxy_type:
+            description: 'Proxy type'
+            required: true
+jobs:
+  generate-minecraft-configs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+  
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+  
+      - name: Pull itzg/bungeecord image
+        run: docker pull itzg/bungeecord
+  
+      - name: Start Minecraft Server
+        run: |
+            docker run -d \
+            -e EULA=TRUE \
+            -e TYPE=${{ github.event.inputs.proxy_type }} \
+            -p 25565:25577 \
+            --name minecraft-server \
+            itzg/bungeecord
+            
+      - name: Wait for container to become healthy
+        run: |
+              while [[ "$(docker inspect -f '{{.State.Health.Status}}' minecraft-server)" != "healthy" ]]; do
+                if [[ "$(docker inspect -f '{{.State.Status}}' minecraft-server)" == "exited" ]]; then
+                  echo "Container has stopped. Aborting workflow."
+                  exit 1
+                fi
+                sleep 5
+              done
+
+      - name: Stop Minecraft Server
+        run: docker stop minecraft-server
+
+      - name: Copy configuration files
+        run: |
+          mkdir -p ${{ github.event.inputs.proxy_type }}
+          docker cp -q minecraft-server:/data/config/paper-global.yml ./${{ github.event.inputs.proxy_type }}/velocity.toml || echo "not found, skipping"
+          docker cp -q minecraft-server:/data/config/paper-world-defaults.yml ./${{ github.event.inputs.proxy_type }}/config.yml || echo "not found, skipping"
+
+      - name: Commit configuration files
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email github-actions[bot]@users.noreply.github.com
+          git add ${{ github.event.inputs.proxy_type }}
+          git commit -m "Add configuration files for Proxy version ${{ github.event.inputs.proxy_type }}"
+          git push origin HEAD:${{ github.event.inputs.proxy_type }}
+
+      - name: Clear away Minecraft Server
+        run: docker rm minecraft-server

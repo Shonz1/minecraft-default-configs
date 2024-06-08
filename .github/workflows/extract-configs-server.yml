@@ -1,4 +1,4 @@
-name: "Extract configs"
+name: "Extract minecraft configs"
 
 on:
    workflow_dispatch:
