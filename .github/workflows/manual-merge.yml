@@ -23,15 +23,17 @@ jobs:
     - name: List all branches
       id: list_branches
       run: |
-        BRANCHES=$(git branch -r | grep -v '\->' | grep -v 'origin/main' | sed 's/origin\///')
+        BRANCHES=$(git branch -r | grep -v '\->' | grep -v 'origin/main' | sed 's/origin\///' | tr '\n' ' ')
         echo "BRANCHES=$BRANCHES" >> $GITHUB_ENV
+      shell: bash
 
     - name: Merge branches into main
       run: |
         git checkout main
         git pull origin main
-        for branch in $BRANCHES; do
+        for branch in ${{ env.BRANCHES }}; do
           echo "Merging branch $branch into main"
           git merge origin/$branch || exit 1
         done
         git push origin main
+      shell: bash
