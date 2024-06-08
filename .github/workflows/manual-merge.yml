@@ -33,7 +33,7 @@ jobs:
         git pull origin main
         for branch in ${{ env.BRANCHES }}; do
           echo "Merging branch $branch into main"
-          git merge origin/$branch || exit 1
+          git merge --allow-unrelated-histories origin/$branch || exit 1
         done
         git push origin main
       shell: bash
