@@ -13,6 +13,8 @@ permissions:
   - bungeecord.command.ip
   - bungeecord.command.reload
   - bungeecord.command.kick
+  - bungeecord.command.send
+  - bungeecord.command.find
 timeout: 30000
 log_commands: false
 network_compression_threshold: 256
@@ -48,6 +50,6 @@ groups:
   md_5:
   - admin
 connection_throttle: 4000
-stats: 94315adc-c1dc-4763-98ef-2240526f52a8
+stats: d7b97b6f-566a-4dc7-a5cd-f9945c217929
 connection_throttle_limit: 3
 log_pings: true
