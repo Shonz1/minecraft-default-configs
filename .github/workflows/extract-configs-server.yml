@@ -74,7 +74,7 @@ jobs:
             git add ${{ github.event.inputs.paper_version }}
             git commit -m "Add configuration files for Paper Minecraft version ${{ github.event.inputs.paper_version }}"
             git push origin HEAD:${{ github.event.inputs.paper_version }}
-            gh pr create --title "Add configuration files for Paper Minecraft version ${{ github.event.inputs.paper_version }}" --body "This PR adds the configuration files for Paper Minecraft version ${{ github.event.inputs.paper_version }}." --head ${{ github.event.inputs.paper_version }} --base main --reviewer Krymonota
+            gh pr create --title "Add configuration files for Paper Minecraft version ${{ github.event.inputs.paper_version }}" --body "This PR adds the configuration files for Paper Minecraft version ${{ github.event.inputs.paper_version }}." --head ${{ github.event.inputs.paper_version }} --base main --reviewer ${{ github.repository_owner }}
           else
             echo "No changes to commit."
           fi

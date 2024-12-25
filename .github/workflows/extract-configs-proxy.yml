@@ -67,7 +67,7 @@ jobs:
             git add ${{ github.event.inputs.proxy_type }}
             git commit -m "Update configuration files of Minecraft proxy ${{ github.event.inputs.proxy_type }}"
             git push origin HEAD:${{ github.event.inputs.proxy_type }}
-            gh pr create --title "Update configuration files of Minecraft proxy ${{ github.event.inputs.proxy_type }}" --body "This PR updates the configuration files of the Minecraft proxy ${{ github.event.inputs.proxy_type }}." --head ${{ github.event.inputs.proxy_type }} --base main --reviewer Krymonota
+            gh pr create --title "Update configuration files of Minecraft proxy ${{ github.event.inputs.proxy_type }}" --body "This PR updates the configuration files of the Minecraft proxy ${{ github.event.inputs.proxy_type }}." --head ${{ github.event.inputs.proxy_type }} --base main --reviewer ${{ github.repository_owner }}
           else
             echo "No changes to commit."
           fi
