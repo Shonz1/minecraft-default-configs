@@ -20,7 +20,8 @@ jobs:
           new_versions=""
           for version in $(cat current_versions.txt); do
             # mc-image-helper allows only specific versions: https://github.com/itzg/mc-image-helper/blob/81c9e1037c551ae8db98468dbeeeb370da80f505/src/main/java/me/itzg/helpers/paper/InstallPaperCommand.java#L67
-            if [[ ! -d "$version" && "$version" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
+            # We skip 1.12 and 1.12.1 because Mojang no longer provides downloads for these versions.
+            if [[ ! -d "$version" && "$version" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ && "$version" != "1.12" && "$version" != "1.12.1" ]]; then
               if [ -z "$new_versions" ]; then
                 new_versions="$version"
               else
