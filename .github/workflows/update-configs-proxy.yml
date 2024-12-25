@@ -2,7 +2,7 @@ name: "Update Minecraft proxy configs"
 
 on:
   schedule:
-    - cron: "0 8 * * *" # Run every day in the morning
+    - cron: "0 8 * * 1" # Run every Monday in the morning
 
 jobs:
   trigger-generate-proxy-configs:
