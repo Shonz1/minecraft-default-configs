@@ -1,0 +1,41 @@
+name: "Update Minecraft proxy configs"
+
+on:
+  schedule:
+    - cron: "0 8 * * *" # Run every day in the morning
+
+jobs:
+  trigger-generate-proxy-configs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger generate-proxy-configs job
+        uses: actions/github-script@v6
+        with:
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'extract-configs-proxy.yml',
+              ref: context.ref,
+              inputs: {
+                proxy_type: 'velocity'
+              }
+            })
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'extract-configs-proxy.yml',
+              ref: context.ref,
+              inputs: {
+                proxy_type: 'waterfall'
+              }
+            })
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'extract-configs-proxy.yml',
+              ref: context.ref,
+              inputs: {
+                proxy_type: 'bungeecord'
+              }
+            })

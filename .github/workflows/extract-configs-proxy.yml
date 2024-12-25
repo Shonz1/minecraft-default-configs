@@ -57,12 +57,17 @@ jobs:
         run: |
           git config user.name github-actions[bot]
           git config user.email github-actions[bot]@users.noreply.github.com
-          git checkout -b ${{ github.event.inputs.proxy_type }}
+          git fetch --all
+          if git show-ref --verify --quiet refs/heads/${{ github.event.inputs.proxy_type }}; then
+            git checkout ${{ github.event.inputs.proxy_type }}
+          else
+            git checkout -b ${{ github.event.inputs.proxy_type }}
+          fi
           if git diff --quiet; then
             git add ${{ github.event.inputs.proxy_type }}
             git commit -m "Update configuration files of Minecraft proxy ${{ github.event.inputs.proxy_type }}"
             git push origin HEAD:${{ github.event.inputs.proxy_type }}
-            gh pr create --title "Update configuration files of Minecraft proxy ${{ github.event.inputs.proxy_type }}" --body "This PR updates the configuration files of the Minecraft proxy ${{ github.event.inputs.proxy_type }}." --head HEAD:${{ github.event.inputs.proxy_type }} --base main --reviewer Krymonota
+            gh pr create --title "Update configuration files of Minecraft proxy ${{ github.event.inputs.proxy_type }}" --body "This PR updates the configuration files of the Minecraft proxy ${{ github.event.inputs.proxy_type }}." --head ${{ github.event.inputs.proxy_type }} --base main --reviewer Krymonota
           else
             echo "No changes to commit."
           fi
