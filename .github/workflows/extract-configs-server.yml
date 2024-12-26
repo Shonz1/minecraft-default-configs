@@ -1,45 +1,52 @@
-name: "Extract minecraft configs"
+name: "Extract Minecraft server configs"
 
 on:
-   workflow_dispatch:
+  workflow_dispatch:
     inputs:
-        paper_version:
-            description: 'Paper Minecraft version'
-            required: true
+      paper_version:
+        description: 'Paper Minecraft server version'
+        required: true
+      paper_channel:
+        description: 'Paper Minecraft server channel'
+        required: true
+
 jobs:
-  generate-minecraft-configs:
+  generate-server-configs:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-  
+      - name: Check out repository
+        uses: actions/checkout@v4
+
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
   
       - name: Pull itzg/minecraft-server image
         run: docker pull itzg/minecraft-server
   
-      - name: Start Minecraft Server
+      - name: Start Minecraft server
         run: |
             docker run -d \
             -e EULA=TRUE \
             -e TYPE=PAPER \
             -e VERSION=${{ github.event.inputs.paper_version }} \
+            -e PAPER_CHANNEL=${{ github.event.inputs.paper_channel}} \
             -p 25565:25565 \
             --name minecraft-server \
             itzg/minecraft-server
-            
+
       - name: Wait for container to become healthy
         run: |
               while [[ "$(docker inspect -f '{{.State.Health.Status}}' minecraft-server)" != "healthy" ]]; do
                 if [[ "$(docker inspect -f '{{.State.Status}}' minecraft-server)" == "exited" ]]; then
                   echo "Container has stopped. Aborting workflow."
+                  docker ps -a
+                  docker logs minecraft-server
                   exit 1
                 fi
                 sleep 5
               done
 
-      - name: Stop Minecraft Server
+      - name: Stop Minecraft server
         run: docker stop minecraft-server
 
       - name: Copy configuration files
@@ -49,6 +56,7 @@ jobs:
           docker cp -q minecraft-server:/data/config/paper-world-defaults.yml ./${{ github.event.inputs.paper_version }}/paper-world-defaults.yml || echo "not found, skipping"
           docker cp -q minecraft-server:/data/spigot.yml ./${{ github.event.inputs.paper_version }}/spigot.yml || echo "not found, skipping"
           docker cp -q minecraft-server:/data/paper.yml ./${{ github.event.inputs.paper_version }}/paper.yml || echo "not found, skipping"
+          docker cp -q minecraft-server:/data/bukkit.yml ./${{ github.event.inputs.paper_version }}/bukkit.yml || echo "not found, skipping"
 
       - name: Commit configuration files
         env:
@@ -56,9 +64,20 @@ jobs:
         run: |
           git config user.name github-actions[bot]
           git config user.email github-actions[bot]@users.noreply.github.com
-          git add ${{ github.event.inputs.paper_version }}
-          git commit -m "Add configuration files for Minecraft version ${{ github.event.inputs.paper_version }}"
-          git push origin HEAD:${{ github.event.inputs.paper_version }}
+          git fetch --all
+          if git show-ref --verify --quiet refs/heads/${{ github.event.inputs.paper_version }}; then
+            git checkout ${{ github.event.inputs.paper_version }}
+          else
+            git checkout -b ${{ github.event.inputs.paper_version }}
+          fi
+          if git diff --quiet; then
+            git add ${{ github.event.inputs.paper_version }}
+            git commit -m "Add configuration files for Paper Minecraft version ${{ github.event.inputs.paper_version }}"
+            git push origin HEAD:${{ github.event.inputs.paper_version }}
+            gh pr create --title "Add configuration files for Paper Minecraft version ${{ github.event.inputs.paper_version }}" --body "This PR adds the configuration files for Paper Minecraft version ${{ github.event.inputs.paper_version }}." --head ${{ github.event.inputs.paper_version }} --base main --reviewer ${{ github.repository_owner }}
+          else
+            echo "No changes to commit."
+          fi
 
-      - name: Clear away Minecraft Server
+      - name: Clear away Minecraft server
         run: docker rm minecraft-server

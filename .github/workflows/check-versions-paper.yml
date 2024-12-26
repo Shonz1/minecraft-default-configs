@@ -1,0 +1,67 @@
+name: "Check Minecraft Paper server versions"
+
+on:
+  schedule:
+    - cron: "0 8 * * *" # Run every day in the morning
+
+jobs:
+  check-new-paper-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Fetch current versions
+        run: |
+          curl -X 'GET' 'https://api.papermc.io/v2/projects/paper' -H 'accept: application/json' | jq -r '.versions[]' > current_versions.txt
+
+      - name: Compare versions and find new ones
+        run: |
+          new_versions=""
+          for version in $(cat current_versions.txt); do
+            # mc-image-helper allows only specific versions: https://github.com/itzg/mc-image-helper/blob/81c9e1037c551ae8db98468dbeeeb370da80f505/src/main/java/me/itzg/helpers/paper/InstallPaperCommand.java#L67
+            # We skip 1.12 and 1.12.1 because Mojang no longer provides downloads for these versions.
+            if [[ ! -d "$version" && "$version" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ && "$version" != "1.12" && "$version" != "1.12.1" ]]; then
+              if [ -z "$new_versions" ]; then
+                new_versions="$version"
+              else
+                new_versions="$new_versions,$version"
+              fi
+            fi
+          done
+          if [ -n "$new_versions" ]; then
+            echo "Found new versions: $new_versions"
+            echo "new_versions=$new_versions" >> $GITHUB_ENV
+          else
+            echo "No new versions found"
+          fi
+
+      - name: Trigger generate-server-configs job
+        if: env.new_versions != ''
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const new_versions = process.env.new_versions.split(',');
+            for (const version of new_versions) {
+              const build_info = await fetch('https://api.papermc.io/v2/projects/paper/versions/' + version + '/builds', {
+                headers: {
+                  'accept': 'application/json'
+                }
+              }).then(response => response.json());
+              const build = build_info.builds.find(build => build.channel === 'default') || build_info.builds.find(build => build.channel === 'experimental');
+              if (!build) {
+                  console.log(`No default or experimental build found for version ${version}`);
+                  continue;
+              }
+              console.log(`Triggering generate-server-configs job for version ${version} on channel ${build.channel}`);
+              await github.rest.actions.createWorkflowDispatch({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                workflow_id: 'extract-configs-server.yml',
+                ref: context.ref,
+                inputs: {
+                  paper_version: version,
+                  paper_channel: build.channel
+                }
+              })
+            }
