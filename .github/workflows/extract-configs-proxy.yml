@@ -23,9 +23,8 @@ jobs:
       - name: Start Minecraft proxy
         run: |
             docker run -d \
-            -e EULA=TRUE \
             -e TYPE=${{ github.event.inputs.proxy_type }} \
-            -e SERVER_PORT=${{ github.event.inputs.proxy_type == 'velocity' && 25565 || 25577 }} \          
+            -e SERVER_PORT=${{ github.event.inputs.proxy_type == 'velocity' && 25565 || 25577 }} \
             --name minecraft-proxy \
             itzg/mc-proxy
 
