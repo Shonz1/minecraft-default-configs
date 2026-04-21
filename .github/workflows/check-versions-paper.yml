@@ -13,7 +13,7 @@ jobs:
 
       - name: Fetch current versions
         run: |
-          curl -X 'GET' 'https://api.papermc.io/v2/projects/paper' -H 'accept: application/json' | jq -r '.versions[]' > current_versions.txt
+          curl -X 'GET' 'https://fill.papermc.io/v3/projects/paper' -H 'accept: application/json' | jq -r '.versions[][]' > current_versions.txt
 
       - name: Compare versions and find new ones
         run: |
@@ -43,12 +43,12 @@ jobs:
           script: |
             const new_versions = process.env.new_versions.split(',');
             for (const version of new_versions) {
-              const build_info = await fetch('https://api.papermc.io/v2/projects/paper/versions/' + version + '/builds', {
+              const builds = await fetch('https://fill.papermc.io/v3/projects/paper/versions/' + version + '/builds', {
                 headers: {
                   'accept': 'application/json'
                 }
               }).then(response => response.json());
-              const build = build_info.builds.find(build => build.channel === 'default') || build_info.builds.find(build => build.channel === 'experimental');
+              const build = builds[0];
               if (!build) {
                   console.log(`No default or experimental build found for version ${version}`);
                   continue;
