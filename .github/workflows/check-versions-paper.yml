@@ -3,6 +3,7 @@ name: "Check Minecraft Paper server versions"
 on:
   schedule:
     - cron: "0 8 * * *" # Run every day in the morning
+  workflow_dispatch:
 
 jobs:
   check-new-paper-version:
